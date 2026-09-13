@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Piano - 3D Experience</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: radial-gradient(circle, #4b6584 0%, #2f3542 100%);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            perspective: 1000px;
+        }
+        .controls {
+            margin-bottom: 50px;
+            text-align: center;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 3rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        .input-group {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: inline-block;
+        }
+        select {
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            margin-right: 15px;
+            cursor: pointer;
+            background: #f1f2f6;
+            color: #2f3542;
+            font-weight: 600;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.6);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Piano Chassis */
+        .piano-container {
+            position: relative;
+            padding: 20px;
+            background: linear-gradient(to bottom, #333, #111);
+            border-radius: 15px;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.8),
+                inset 0 2px 5px rgba(255,255,255,0.2);
+            border-bottom: 15px solid #000;
+            transform: rotateX(10deg);
+        }
+
+        .piano {
+            display: flex;
+            position: relative;
+            background-color: #000;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,1);
+        }
+
+        /* Base Key Styles */
+        .key {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 15px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* White Keys */
+        .key.white {
+            width: 45px;
+            height: 220px;
+            background: linear-gradient(to bottom, #eee 0%, #fff 100%);
+            border: 1px solid #ccc;
+            border-radius: 0 0 8px 8px;
+            color: #888;
+            z-index: 1;
+            box-shadow: 
+                inset 0 0 5px rgba(0,0,0,0.1),
+                0 5px 5px rgba(0,0,0,0.2);
+        }
+
+        .key.white.active {
+            background: linear-gradient(to bottom, #ddd 0%, #bbb 100%);
+            transform: translateY(4px);
+            box-shadow: 
+                inset 0 0 10px rgba(0,0,0,0.2),
+                0 2px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Black Keys */
+        .key.black {
+            width: 30px;
+            height: 130px;
+            background: linear-gradient(to bottom, #444 0%, #000 100%);
+            border-radius: 0 0 5px 5px;
+            color: #eee;
+            margin-left: -15px;
+            margin-right: -15px;
+            z-index: 2;
+            box-shadow: 
+                0 5px 10px rgba(0,0,0,0.5),
+                inset 0 1px 2px rgba(255,255,255,0.3);
+        }
+
+        .key.black.active {
+            background: linear-gradient(to bottom, #222 0%, #000 100%);
+            transform: translateY(3px);
+            box-shadow: 
+                0 2px 5px rgba(0,0,0,0.5),
+                inset 0 1px 2px rgba(255,255,255,0.1);
+        }
+
+        /* Key Label Styling */
+        .key span {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h1>Virtual Piano</h1>
+        <div class="input-group">
+            <select id="songSelect">
+                <option value="interstellar">Interstellar (Theme)</option>
+                <option value="nationalAnthem">Indian National Anthem</option>
+                <option value="humSabBhartiya">Hum Sab Bhartiya Hai</option>
+            </select>
+            <button id="playBtn">Play Song</button>
+        </div>
+    </div>
+
+    <div class="piano-container">
+        <div class="piano" id="piano">
+            <!-- Keys generated by JS -->
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        const notes = {
+            "C4": 261.63, "C#4": 277.18, "D4": 293.66, "D#4": 311.13, "E4": 329.63, "F4": 349.23, 
+            "F#4": 369.99, "G4": 392.00, "G#4": 415.30, "A4": 440.00, "A#4": 466.16, "B4": 493.88,
+            "C5": 523.25, "C#5": 554.37, "D5": 587.33, "D#5": 622.25, "E5": 659.25, "F5": 698.46,
+            "F#5": 739.99, "G5": 783.99, "G#5": 830.61, "A5": 880.00, "A#5": 932.33, "B5": 987.77,
+            "C6": 1046.50
+        };
+
+        const keyLabels = Object.keys(notes);
+        const pianoDiv = document.getElementById('piano');
+
+        keyLabels.forEach(note => {
+            const keyDiv = document.createElement('div');
+            keyDiv.className = `key ${note.includes('#') ? 'black' : 'white'}`;
+            keyDiv.dataset.note = note;
+            
+            const label = document.createElement('span');
+            label.innerText = note;
+            keyDiv.appendChild(label);
+            
+            keyDiv.addEventListener('mousedown', () => playNote(note));
+            pianoDiv.appendChild(keyDiv);
+        });
+
+        function playNote(note, duration = 0.5) {
+            if (!notes[note]) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(notes[note], audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+
+            const keyEl = document.querySelector(`[data-note="${note}"]`);
+            if (keyEl) {
+                keyEl.classList.add('active');
+                setTimeout(() => keyEl.classList.remove('active'), duration * 1000);
+            }
+        }
+
+        const songs = {
+            interstellar: [
+                { note: "C4", duration: 0.6 }, { note: "C4", duration: 0.6 }, 
+                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 },
+                { note: "C5", duration: 0.6 }, { note: "C5", duration: 0.6 },
+                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 },
+                { note: "C5", duration: 0.6 }, { note: "C5", duration: 0.6 },
+                { note: "E5", duration: 0.6 }, { note: "E5", duration: 0.6 },
+                { note: "C5", duration: 0.6 }, { note: "C5", duration: 0.6 },
+                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 }
+            ],
+            nationalAnthem: [
+                // Part 1
+                { note: "C4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 },
+                { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "F4", duration: 0.8 },
+                { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "B4", duration: 0.2 }, { note: "D4", duration: 0.4 }, { note: "C4", duration: 0.8 },
+                // Part 2
+                { note: "C4", duration: 0.6 }, { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 },
+                { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "F#4", duration: 0.4 }, { note: "A4", duration: 0.4 }, { note: "G4", duration: 0.8 },
+                { note: "F4", duration: 0.6 }, { note: "F4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.6 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.8 },
+                // Part 3
+                { note: "C4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.6 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "F4", duration: 0.8 },
+                { note: "E4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.6 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.8 },
+                // Part 4
+                { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 },
+                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "A4", duration: 0.4 }, { note: "G4", duration: 0.8 },
+                // Finale
+                { note: "B4", duration: 0.4 }, { note: "B4", duration: 0.4 }, { note: "C5", duration: 0.6 }, { note: "A4", duration: 0.4 }, { note: "A4", duration: 0.4 }, { note: "B4", duration: 0.8 },
+                { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "A4", duration: 0.8 },
+                { note: "C5", duration: 0.4 }, { note: "C5", duration: 0.4 }, { note: "D5", duration: 0.4 }, { note: "D5", duration: 0.4 }, { note: "E5", duration: 0.4 }, { note: "E5", duration: 0.4 }, { note: "D5", duration: 0.4 }, { note: "E5", duration: 0.4 }, { note: "F5", duration: 0.8 }
+            ],
+            humSabBhartiya: [
+                { note: "C4", duration: 0.5 }, { note: "E4", duration: 0.5 }, { note: "G4", duration: 0.5 },
+                { note: "C5", duration: 1.0 }, { note: "B4", duration: 0.5 }, { note: "A4", duration: 0.5 },
+                { note: "G4", duration: 1.0 }, { note: "F4", duration: 0.5 }, { note: "E4", duration: 0.5 },
+                { note: "D4", duration: 1.0 }, { note: "C4", duration: 1.5 }
+            ]
+        };
+
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+            const songKey = document.getElementById('songSelect').value;
+            const song = songs[songKey];
+            
+            for (const part of song) {
+                playNote(part.note, part.duration);
+                await new Promise(resolve => setTimeout(resolve, part.duration * 1000));
+            }
+        });
+    </script>
+</body>
+</html>
