@@ -1,0 +1,26 @@
+[
+  {
+    "Title": "Software Engineer - Backend",
+    "Company": "TechGiant Seattle Inc.",
+    "Location": "Seattle, WA",
+    "Date Posted": "2026-09-11",
+    "Visa Terms": "Sponsorship Mentioned",
+    "URL": "https://example.com/jobs/1"
+  },
+  {
+    "Title": "SDE II",
+    "Company": "CloudScale Corp",
+    "Location": "Seattle, WA",
+    "Date Posted": "2026-09-09",
+    "Visa Terms": "Sponsorship Mentioned",
+    "URL": "https://example.com/jobs/2"
+  },
+  {
+    "Title": "Software Development Engineer",
+    "Company": "Global Systems",
+    "Location": "Seattle, WA",
+    "Date Posted": "2026-09-10",
+    "Visa Terms": "Sponsorship Mentioned",
+    "URL": "https://example.com/jobs/5"
+  }
+]

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbital Miner - Pro Edition</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #020205;
+            color: #00ffcc;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+        }
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            text-shadow: 0 0 5px #00ffcc;
+            background: rgba(0, 20, 20, 0.4);
+            padding: 15px;
+            border-left: 3px solid #00ffcc;
+        }
+        .hud-item {
+            margin-bottom: 5px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        #station-ui {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(5, 5, 20, 0.95);
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+            padding: 30px;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+            min-width: 400px;
+        }
+        #station-ui h2 {
+            margin: 0;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            color: #fff;
+            text-shadow: 0 0 10px #00ffcc;
+        }
+        .upgrade-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .upgrade-item {
+            border: 1px solid #00ffcc;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: rgba(0, 255, 204, 0.05);
+        }
+        .upgrade-item:hover {
+            background: rgba(0, 255, 204, 0.2);
+            box-shadow: 0 0 10px #00ffcc;
+        }
+        .resource-display {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 10px;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+        }
+        .gold { color: #ffd700; }
+        .titanium { color: #a0a0a0; }
+        .platinum { color: #e5e4e2; }
+        button {
+            background: transparent;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: inherit;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #00ffcc;
+            color: #05050a;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="hud">
+        <div class="hud-item"><span>VELOCITY:</span> <span id="hud-vel">0</span></div>
+        <div class="hud-item"><span>HULL:</span> <span id="hud-hull">100</span>%</div>
+        <div class="hud-item"><span>CARGO:</span> <span id="hud-cargo">0</span>/<span id="hud-max-cargo">10</span></div>
+    </div>
+
+    <div id="station-ui">
+        <h2>MotherStation</h2>
+        <div class="resource-display">
+            <span class="gold">GOLD: <span id="res-gold">0</span></span>
+            <span class="titanium">TITANIUM: <span id="res-titanium">0</span></span>
+            <span class="platinum">PLATINUM: <span id="res-platinum">0</span></span>
+        </div>
+        <div class="upgrade-grid">
+            <div class="upgrade-item" onclick="game.upgrade('speed')">
+                <span>Top Speed</span>
+                <span id="up-speed-cost" style="font-size: 0.8em; opacity: 0.8;">Cost: 5 Gold</span>
+                <button>UPGRADE</button>
+            </div>
+            <div class="upgrade-item" onclick="game.upgrade('laser')">
+                <span>Laser Power</span>
+                <span id="up-laser-cost" style="font-size: 0.8em; opacity: 0.8;">Cost: 5 Titanium</span>
+                <button>UPGRADE</button>
+            </div>
+            <div class="upgrade-item" onclick="game.upgrade('cargo')">
+                <span>Cargo Capacity</span>
+                <span id="up-cargo-cost" style="font-size: 0.8em; opacity: 0.8;">Cost: 5 Platinum</span>
+                <button>UPGRADE</button>
+            </div>
+            <div class="upgrade-item" onclick="game.upgrade('tractor')">
+                <span>Tractor Radius</span>
+                <span id="up-tractor-cost" style="font-size: 0.8em; opacity: 0.8;">Cost: 10 Gold</span>
+                <button>UPGRADE</button>
+            </div>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            <button onclick="game.undock()" style="padding: 15px 30px; font-size: 1.2em;">UNDOCK & DEPLOY</button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Enhanced Physics Constants
+        const PHYSICS = {
+            DRAG: 0.992, // More realistic space drag (almost vacuum)
+            ROTATION_SPEED: 0.06,
+            THRUST: 0.2,
+            TRACTOR_FORCE: 0.08,
+            MAX_VEL: 6,
+            SHIP_MASS: 1.0,
+            COLLISION_ELASTICITY: 0.7
+        };
+
+        const RESOURCES = {
+            GOLD: { color: '#ffd700', value: 1 },
+            TITANIUM: { color: '#a0a0a0', value: 2 },
+            PLATINUM: { color: '#e5e4e2', value: 3 }
+        };
+
+        class Vector {
+            constructor(x, y) { this.x = x; this.y = y; }
+            add(v) { return new Vector(this.x + v.x, this.y + v.y); }
+            sub(v) { return new Vector(this.x - v.x, this.y - v.y); }
+            mul(s) { return new Vector(this.x * s, this.y * s); }
+            mag() { return Math.sqrt(this.x * this.x + this.y * this.y); }
+            normalize() {
+                const m = this.mag();
+                return m === 0 ? new Vector(0, 0) : new Vector(this.x / m, this.y / m);
+            }
+            dist(v) { return this.sub(v).mag(); }
+            dot(v) { return this.x * v.x + this.y * v.y; }
+        }
+
+        class Particle {
+            constructor(pos, vel, color, life, size = 1) {
+                this.pos = pos;
+                this.vel = vel;
+                this.color = color;
+                this.life = life;
+                this.maxLife = life;
+                this.size = size;
+            }
+            update() {
+                this.pos = this.pos.add(this.vel);
+                this.vel = this.vel.mul(0.96);
+                this.life--;
+            }
+            draw() {
+                ctx.strokeStyle = this.color;
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.lineWidth = this.size;
+                ctx.beginPath();
+                ctx.moveTo(this.pos.x, this.pos.y);
+                ctx.lineTo(this.pos.x - this.vel.x * 2, this.pos.y - this.vel.y * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class Asteroid {
+            constructor(pos, size, vel) {
+                this.pos = pos;
+                this.size = size;
+                this.vel = vel;
+                this.mass = size * 0.5;
+                this.angle = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.02;
+                this.vertices = [];
+                const points = 8 + Math.floor(Math.random() * 5);
+                for(let i=0; i<points; i++) {
+                    const r = size * (0.8 + Math.random() * 0.4);
+                    const a = (i / points) * Math.PI * 2;
+                    this.vertices.push({x: Math.cos(a)*r, y: Math.sin(a)*r});
+                }
+            }
+            update() {
+                this.pos = this.pos.add(this.vel);
+                this.angle += this.rotSpeed;
+                if (this.pos.x < -100) this.pos.x = canvas.width + 100;
+                if (this.pos.x > canvas.width + 100) this.pos.x = -100;
+                if (this.pos.y < -100) this.pos.y = canvas.height + 100;
+                if (this.pos.y > canvas.height + 100) this.pos.y = -100;
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.pos.x, this.pos.y);
+                ctx.rotate(this.angle);
+                ctx.strokeStyle = '#00ffcc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
+                for(let v of this.vertices) ctx.lineTo(v.x, v.y);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class Ore {
+            constructor(pos, type) {
+                this.pos = pos;
+                this.type = type;
+                this.vel = new Vector((Math.random()-0.5)*3, (Math.random()-0.5)*3);
+                this.size = 3;
+                this.mass = 0.1;
+            }
+            update() {
+                this.pos = this.pos.add(this.vel);
+                this.vel = this.vel.mul(0.99);
+            }
+            draw() {
+                ctx.fillStyle = RESOURCES[this.type].color;
+                ctx.beginPath();
+                ctx.arc(this.pos.x, this.pos.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = RESOURCES[this.type].color;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Laser {
+            constructor(pos, angle, power) {
+                this.pos = pos;
+                this.vel = new Vector(Math.cos(angle)*15, Math.sin(angle)*15);
+                this.power = power;
+                this.life = 60;
+            }
+            update() {
+                this.pos = this.pos.add(this.vel);
+                this.life--;
+            }
+            draw() {
+                ctx.strokeStyle = '#ff0066';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(this.pos.x, this.pos.y);
+                ctx.lineTo(this.pos.x - this.vel.x * 0.2, this.pos.y - this.vel.y * 0.2);
+                ctx.stroke();
+            }
+        }
+
+        class Game {
+            constructor() {
+                this.ship = {
+                    pos: new Vector(canvas.width/2, canvas.height/2),
+                    vel: new Vector(0, 0),
+                    angle: -Math.PI/2,
+                    hull: 100,
+                    cargo: [],
+                    upgrades: { speed: 1, laser: 1, cargo: 1, tractor: 1 },
+                    mass: PHYSICS.SHIP_MASS
+                };
+                this.station = { pos: new Vector(canvas.width/2, canvas.height/2), size: 45 };
+                this.asteroids = [];
+                this.ores = [];
+                this.lasers = [];
+                this.particles = [];
+                this.resources = { GOLD: 0, TITANIUM: 0, PLATINUM: 0 };
+                this.input = {};
+                this.docked = false;
+                this.screenShake = 0;
+                this.init();
+            }
+
+            init() {
+                window.addEventListener('keydown', e => this.input[e.code] = true);
+                window.addEventListener('keyup', e => this.input[e.code] = false);
+                this.spawnAsteroids(12);
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                this.station.pos = new Vector(canvas.width/2, canvas.height/2);
+            }
+
+            spawnAsteroids(count) {
+                for(let i=0; i<count; i++) {
+                    let pos = new Vector(Math.random()*canvas.width, Math.random()*canvas.height);
+                    // Avoid spawning on station
+                    if (pos.dist(this.station.pos) < 150) pos = pos.add(new Vector(200, 200));
+                    this.asteroids.push(new Asteroid(
+                        pos,
+                        30 + Math.random()*20,
+                        new Vector((Math.random()-0.5)*2, (Math.random()-0.5)*2)
+                    ));
+                }
+            }
+
+            upgrade(type) {
+                const costs = {
+                    speed: { res: 'GOLD', amt: 5 * this.ship.upgrades.speed },
+                    laser: { res: 'TITANIUM', amt: 5 * this.ship.upgrades.laser },
+                    cargo: { res: 'PLATINUM', amt: 5 * this.ship.upgrades.cargo },
+                    tractor: { res: 'GOLD', amt: 10 * this.ship.upgrades.tractor }
+                };
+                const cost = costs[type];
+                if (this.resources[cost.res] >= cost.amt) {
+                    this.resources[cost.res] -= cost.amt;
+                    this.ship.upgrades[type]++;
+                    this.updateUI();
+                }
+            }
+
+            undock() {
+                this.docked = false;
+                document.getElementById('station-ui').style.display = 'none';
+                this.ship.pos = this.station.pos.add(new Vector(0, -70));
+                this.ship.vel = new Vector(0, 0);
+            }
+
+            update() {
+                if (this.docked) return;
+
+                // Ship Rotation (A / D)
+                if (this.input['KeyA']) this.ship.angle -= PHYSICS.ROTATION_SPEED;
+                if (this.input['KeyD']) this.ship.angle += PHYSICS.ROTATION_SPEED;
+
+                // Ship Thrust (W)
+                if (this.input['KeyW']) {
+                    const thrust = new Vector(Math.cos(this.ship.angle), Math.sin(this.ship.angle)).mul(PHYSICS.THRUST);
+                    this.ship.vel = this.ship.vel.add(thrust);
+                    
+                    // Engine Particles
+                    this.particles.push(new Particle(
+                        this.ship.pos.add(new Vector(Math.cos(this.ship.angle)*-10, Math.sin(this.ship.angle)*-10)),
+                        new Vector(-Math.cos(this.ship.angle)*2, -Math.sin(this.ship.angle)*2),
+                        '#ffaa00', 15, 2
+                    ));
+                }
+
+                // Apply physics
+                this.ship.vel = this.ship.vel.mul(PHYSICS.DRAG);
+                const speed = this.ship.vel.mag();
+                const maxSpeed = PHYSICS.MAX_VEL * (0.6 + this.ship.upgrades.speed * 0.2);
+                if (speed > maxSpeed) {
+                    this.ship.vel = this.ship.vel.normalize().mul(maxSpeed);
+                }
+                this.ship.pos = this.ship.pos.add(this.ship.vel);
+
+                // Shooting (X)
+                if (this.input['KeyX']) {
+                    this.lasers.push(new Laser(this.ship.pos, this.ship.angle, this.ship.upgrades.laser));
+                    this.input['KeyX'] = false;
+                }
+
+                // Tractor Beam (Space)
+                if (this.input['Space']) {
+                    const radius = 120 + (this.ship.upgrades.tractor * 25);
+                    this.ores.forEach(ore => {
+                        if (ore.pos.dist(this.ship.pos) < radius) {
+                            const pullDir = this.ship.pos.sub(ore.pos).normalize();
+                            const pullForce = pullDir.mul(PHYSICS.TRACTOR_FORCE);
+                            ore.vel = ore.vel.add(pullForce);
+                        }
+                    });
+                }
+
+                // Object Updates
+                this.asteroids.forEach(a => a.update());
+                this.ores.forEach(o => o.update());
+                this.lasers.forEach((l, i) => {
+                    l.update();
+                    if (l.life <= 0) this.lasers.splice(i, 1);
+                });
+                this.particles.forEach((p, i) => {
+                    p.update();
+                    if (p.life <= 0) this.particles.splice(i, 1);
+                });
+
+                // Collisions: Laser -> Asteroid
+                this.lasers.forEach((l, li) => {
+                    this.asteroids.forEach((a, ai) => {
+                        if (l.pos.dist(a.pos) < a.size) {
+                            this.lasers.splice(li, 1);
+                            this.destroyAsteroid(a, ai);
+                        }
+                    });
+                });
+
+                // Realistic Collision: Ship -> Asteroid
+                this.asteroids.forEach(a => {
+                    const dist = this.ship.pos.dist(a.pos);
+                    if (dist < a.size + 12) {
+                        this.screenShake = 5;
+                        this.ship.hull -= 0.2;
+                        
+                        // Elastic Collision
+                        const normal = this.ship.pos.sub(a.pos).normalize();
+                        const relativeVel = this.ship.vel.sub(a.vel);
+                        const velAlongNormal = relativeVel.dot(normal);
+                        
+                        if (velAlongNormal < 0) {
+                            const j = -(1 + PHYSICS.COLLISION_ELASTICITY) * velAlongNormal;
+                            const impulse = normal.mul(j * (this.ship.mass / (this.ship.mass + a.mass)));
+                            this.ship.vel = this.ship.vel.add(impulse);
+                        }
+                    }
+                });
+
+                // Collisions: Ship -> Ore
+                this.ores.forEach((o, oi) => {
+                    if (this.ship.pos.dist(o.pos) < 20) {
+                        const maxCargo = 10 + (this.ship.upgrades.cargo * 5);
+                        if (this.ship.cargo.length < maxCargo) {
+                            this.ship.cargo.push(o.type);
+                            this.ores.splice(oi, 1);
+                        }
+                    }
+                });
+
+                // Docking
+                if (this.ship.pos.dist(this.station.pos) < 45) {
+                    this.docked = true;
+                    this.processCargo();
+                    document.getElementById('station-ui').style.display = 'flex';
+                }
+
+                if (this.screenShake > 0) this.screenShake--;
+                this.updateUI();
+            }
+
+            destroyAsteroid(a, index) {
+                this.screenShake = 3;
+                for(let i=0; i<20; i++) {
+                    this.particles.push(new Particle(
+                        a.pos, 
+                        new Vector((Math.random()-0.5)*6, (Math.random()-0.5)*6), 
+                        '#00ffcc', 
+                        20 + Math.random()*20, 
+                        Math.random()*3
+                    ));
+                }
+
+                if (a.size > 20) {
+                    for(let i=0; i<2; i++) {
+                        this.asteroids.push(new Asteroid(
+                            a.pos, 
+                            a.size * 0.6, 
+                            new Vector((Math.random()-0.5)*4, (Math.random()-0.5)*4)
+                        ));
+                    }
+                }
+
+                const types = ['GOLD', 'TITANIUM', 'PLATINUM'];
+                const type = types[Math.floor(Math.random() * (a.size > 30 ? 3 : 2))];
+                this.ores.push(new Ore(a.pos, type));
+
+                this.asteroids.splice(index, 1);
+                if (this.asteroids.length < 8) this.spawnAsteroids(5);
+            }
+
+            processCargo() {
+                this.ship.cargo.forEach(res => {
+                    this.resources[res]++;
+                });
+                this.ship.cargo = [];
+            }
+
+            updateUI() {
+                document.getElementById('hud-vel').innerText = Math.round(this.ship.vel.mag() * 10);
+                document.getElementById('hud-hull').innerText = Math.max(0, Math.floor(this.ship.hull));
+                document.getElementById('hud-cargo').innerText = this.ship.cargo.length;
+                document.getElementById('hud-max-cargo').innerText = 10 + (this.ship.upgrades.cargo * 5);
+                
+                document.getElementById('res-gold').innerText = this.resources.GOLD;
+                document.getElementById('res-titanium').innerText = this.resources.TITANIUM;
+                document.getElementById('res-platinum').innerText = this.resources.PLATINUM;
+
+                document.getElementById('up-speed-cost').innerText = `Cost: ${5 * this.ship.upgrades.speed} Gold`;
+                document.getElementById('up-laser-cost').innerText = `Cost: ${5 * this.ship.upgrades.laser} Titanium`;
+                document.getElementById('up-cargo-cost').innerText = `Cost: ${5 * this.ship.upgrades.cargo} Platinum`;
+                document.getElementById('up-tractor-cost').innerText = `Cost: ${10 * this.ship.upgrades.tractor} Gold`;
+            }
+
+            draw() {
+                ctx.save();
+                if (this.screenShake > 0) {
+                    ctx.translate((Math.random()-0.5)*this.screenShake, (Math.random()-0.5)*this.screenShake);
+                }
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#fff';
+                for(let i=0; i<80; i++) {
+                    ctx.fillRect((i*137)%canvas.width, (i*543)%canvas.height, 1, 1);
+                }
+
+                // Station
+                ctx.strokeStyle = '#00ffcc';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(this.station.pos.x, this.station.pos.y, this.station.size, 0, Math.PI*2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(this.station.pos.x, this.station.pos.y, this.station.size * 0.7, 0, Math.PI*2);
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                this.asteroids.forEach(a => a.draw());
+                this.ores.forEach(o => o.draw());
+                this.lasers.forEach(l => l.draw());
+                this.particles.forEach(p => p.draw());
+
+                // Ship
+                if (!this.docked) {
+                    ctx.save();
+                    ctx.translate(this.ship.pos.x, this.ship.pos.y);
+                    ctx.rotate(this.ship.angle);
+                    ctx.strokeStyle = '#00ffcc';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(18, 0);
+                    ctx.lineTo(-12, -12);
+                    ctx.lineTo(-6, 0);
+                    ctx.lineTo(-12, 12);
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                ctx.restore();
+            }
+
+            loop() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        const game = new Game();
+        game.loop();
+    </script>
+</body>
+</html>

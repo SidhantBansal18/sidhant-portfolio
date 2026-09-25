@@ -3,279 +3,529 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Piano - 3D Experience</title>
+    <title>Sidhant Bansal | Software Engineer Portfolio</title>
     <style>
+        :root {
+            --bg-color: #0d1117;
+            --panel-bg: #161b22;
+            --accent-color: #58a6ff;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --border-color: #30363d;
+            --success-color: #238636;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            padding: 40px 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background: radial-gradient(circle, #4b6584 0%, #2f3542 100%);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-            perspective: 1000px;
         }
-        .controls {
-            margin-bottom: 50px;
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
             text-align: center;
-            z-index: 10;
+            margin-bottom: 40px;
         }
+
         h1 {
-            font-size: 3rem;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            margin-bottom: 10px;
-        }
-        .input-group {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            display: inline-block;
-        }
-        select {
-            padding: 12px 20px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: none;
-            margin-right: 15px;
-            cursor: pointer;
-            background: #f1f2f6;
-            color: #2f3542;
-            font-weight: 600;
-        }
-        button {
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.6);
-        }
-        button:active {
-            transform: translateY(0);
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 8px;
         }
 
-        /* Piano Chassis */
-        .piano-container {
-            position: relative;
-            padding: 20px;
-            background: linear-gradient(to bottom, #333, #111);
-            border-radius: 15px;
-            box-shadow: 
-                0 30px 60px rgba(0,0,0,0.8),
-                inset 0 2px 5px rgba(255,255,255,0.2);
-            border-bottom: 15px solid #000;
-            transform: rotateX(10deg);
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
         }
 
-        .piano {
+        .contact-links {
             display: flex;
-            position: relative;
-            background-color: #000;
-            padding: 5px;
-            border-radius: 5px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,1);
-        }
-
-        /* Base Key Styles */
-        .key {
-            position: relative;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.1s ease;
-            display: flex;
-            align-items: flex-end;
             justify-content: center;
-            padding-bottom: 15px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .contact-links a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            padding: 4px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .contact-links a:hover {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: var(--accent-color);
+        }
+
+        .section {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .skill-category h4 {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-family: var(--font-mono);
+        }
+
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .skill-tag {
+            background: #21262d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .exp-item, .proj-item {
+            margin-bottom: 30px;
+        }
+
+        .exp-item:last-child, .proj-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .item-title {
+            font-size: 1.1rem;
             font-weight: bold;
-            font-size: 12px;
+            color: #fff;
         }
 
-        /* White Keys */
-        .key.white {
-            width: 45px;
-            height: 220px;
-            background: linear-gradient(to bottom, #eee 0%, #fff 100%);
-            border: 1px solid #ccc;
-            border-radius: 0 0 8px 8px;
-            color: #888;
-            z-index: 1;
-            box-shadow: 
-                inset 0 0 5px rgba(0,0,0,0.1),
-                0 5px 5px rgba(0,0,0,0.2);
+        .item-date {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
 
-        .key.white.active {
-            background: linear-gradient(to bottom, #ddd 0%, #bbb 100%);
-            transform: translateY(4px);
-            box-shadow: 
-                inset 0 0 10px rgba(0,0,0,0.2),
-                0 2px 2px rgba(0,0,0,0.2);
+        .item-sub {
+            font-size: 0.95rem;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            font-weight: 500;
         }
 
-        /* Black Keys */
-        .key.black {
-            width: 30px;
-            height: 130px;
-            background: linear-gradient(to bottom, #444 0%, #000 100%);
-            border-radius: 0 0 5px 5px;
-            color: #eee;
-            margin-left: -15px;
-            margin-right: -15px;
-            z-index: 2;
-            box-shadow: 
-                0 5px 10px rgba(0,0,0,0.5),
-                inset 0 1px 2px rgba(255,255,255,0.3);
+        .item-content ul {
+            list-style: none;
         }
 
-        .key.black.active {
-            background: linear-gradient(to bottom, #222 0%, #000 100%);
-            transform: translateY(3px);
-            box-shadow: 
-                0 2px 5px rgba(0,0,0,0.5),
-                inset 0 1px 2px rgba(255,255,255,0.1);
+        .item-content li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: var(--text-main);
         }
 
-        /* Key Label Styling */
-        .key span {
-            pointer-events: none;
+        .item-content li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        .proj-tech {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .deep-dive h3 {
+            color: #fff;
+            margin-bottom: 16px;
+        }
+
+        .deep-dive h4 {
+            color: var(--accent-color);
+            margin: 20px 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .deep-dive p {
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .highlight-box {
+            background: #0d1117;
+            border-left: 4px solid var(--accent-color);
+            padding: 12px;
+            margin: 15px 0;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        .btn-dive {
+            background: none;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-dive:hover {
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .item-header { flex-direction: column; align-items: flex-start; }
+            .item-date { margin-bottom: 4px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="controls">
-        <h1>Virtual Piano</h1>
-        <div class="input-group">
-            <select id="songSelect">
-                <option value="interstellar">Interstellar (Theme)</option>
-                <option value="nationalAnthem">Indian National Anthem</option>
-                <option value="humSabBhartiya">Hum Sab Bhartiya Hai</option>
-            </select>
-            <button id="playBtn">Play Song</button>
+    <div class="container">
+        <header>
+            <h1 id="user-name"></h1>
+            <p class="subtitle" id="user-summary"></p>
+            <div class="contact-links" id="user-contacts"></div>
+        </header>
+
+        <div class="section">
+            <div class="section-title">Technical Arsenal</div>
+            <div class="skill-grid" id="user-skills"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Professional Experience</div>
+            <div id="user-experience"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Featured Projects</div>
+            <div id="user-projects"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Education</div>
+            <div id="user-education"></div>
         </div>
     </div>
 
-    <div class="piano-container">
-        <div class="piano" id="piano">
-            <!-- Keys generated by JS -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <div id="modal-body" class="deep-dive"></div>
         </div>
     </div>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        const notes = {
-            "C4": 261.63, "C#4": 277.18, "D4": 293.66, "D#4": 311.13, "E4": 329.63, "F4": 349.23, 
-            "F#4": 369.99, "G4": 392.00, "G#4": 415.30, "A4": 440.00, "A#4": 466.16, "B4": 493.88,
-            "C5": 523.25, "C#5": 554.37, "D5": 587.33, "D#5": 622.25, "E5": 659.25, "F5": 698.46,
-            "F#5": 739.99, "G5": 783.99, "G#5": 830.61, "A5": 880.00, "A#5": 932.33, "B5": 987.77,
-            "C6": 1046.50
-        };
-
-        const keyLabels = Object.keys(notes);
-        const pianoDiv = document.getElementById('piano');
-
-        keyLabels.forEach(note => {
-            const keyDiv = document.createElement('div');
-            keyDiv.className = `key ${note.includes('#') ? 'black' : 'white'}`;
-            keyDiv.dataset.note = note;
-            
-            const label = document.createElement('span');
-            label.innerText = note;
-            keyDiv.appendChild(label);
-            
-            keyDiv.addEventListener('mousedown', () => playNote(note));
-            pianoDiv.appendChild(keyDiv);
-        });
-
-        function playNote(note, duration = 0.5) {
-            if (!notes[note]) return;
-            
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(notes[note], audioCtx.currentTime);
-            
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-
-            const keyEl = document.querySelector(`[data-note="${note}"]`);
-            if (keyEl) {
-                keyEl.classList.add('active');
-                setTimeout(() => keyEl.classList.remove('active'), duration * 1000);
-            }
-        }
-
-        const songs = {
-            interstellar: [
-                { note: "C4", duration: 0.6 }, { note: "C4", duration: 0.6 }, 
-                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 },
-                { note: "C5", duration: 0.6 }, { note: "C5", duration: 0.6 },
-                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 },
-                { note: "C5", duration: 0.6 }, { note: "C5", duration: 0.6 },
-                { note: "E5", duration: 0.6 }, { note: "E5", duration: 0.6 },
-                { note: "C5", duration: 0.6 }, { note: "C5", duration: 0.6 },
-                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 }
+        const userData = {
+            name: "Sidhant Bansal",
+            summary: "Software Engineer with 4+ years of experience in full-stack delivery and applied data engineering. Specialized in high-performance Python simulations and enterprise C#/.NET platforms, integrating AI-assisted development to accelerate delivery cycles.",
+            contacts: [
+                { label: "Seattle, WA", value: "#", type: "loc" },
+                { label: "sidhantbansal18@outlook.com", value: "mailto:sidhantbansal18@outlook.com", type: "email" },
+                { label: "LinkedIn", value: "https://linkedin.com/in/sidhantbansal18", type: "link" },
+                { label: "GitHub", value: "https://github.com/SidhantBansal18", type: "link" }
             ],
-            nationalAnthem: [
-                // Part 1
-                { note: "C4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 },
-                { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "F4", duration: 0.8 },
-                { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "B4", duration: 0.2 }, { note: "D4", duration: 0.4 }, { note: "C4", duration: 0.8 },
-                // Part 2
-                { note: "C4", duration: 0.6 }, { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.6 },
-                { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "F#4", duration: 0.4 }, { note: "A4", duration: 0.4 }, { note: "G4", duration: 0.8 },
-                { note: "F4", duration: 0.6 }, { note: "F4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.6 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.8 },
-                // Part 3
-                { note: "C4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "E4", duration: 0.6 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "F4", duration: 0.8 },
-                { note: "E4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.6 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.4 }, { note: "D4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "E4", duration: 0.8 },
-                // Part 4
-                { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 },
-                { note: "G4", duration: 0.6 }, { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "F4", duration: 0.4 }, { note: "A4", duration: 0.4 }, { note: "G4", duration: 0.8 },
-                // Finale
-                { note: "B4", duration: 0.4 }, { note: "B4", duration: 0.4 }, { note: "C5", duration: 0.6 }, { note: "A4", duration: 0.4 }, { note: "A4", duration: 0.4 }, { note: "B4", duration: 0.8 },
-                { note: "G4", duration: 0.4 }, { note: "G4", duration: 0.4 }, { note: "A4", duration: 0.8 },
-                { note: "C5", duration: 0.4 }, { note: "C5", duration: 0.4 }, { note: "D5", duration: 0.4 }, { note: "D5", duration: 0.4 }, { note: "E5", duration: 0.4 }, { note: "E5", duration: 0.4 }, { note: "D5", duration: 0.4 }, { note: "E5", duration: 0.4 }, { note: "F5", duration: 0.8 }
+            skills: {
+                "Languages": ["Python", "C#", "JavaScript", "TypeScript", "SQL", "Java", "Angular", "C++"],
+                "Frameworks & Cloud": ["React", "Node.js", "Express", "ASP.NET", "Spring Boot", "AWS", "Azure", "Docker", "ArcGIS", "Unity"],
+                "Databases & Tools": ["PostgreSQL", "MySQL", "MongoDB", "SQL Server", "Git", "JIRA", "GitHub Copilot", "Numba", "Polars", "SQLAlchemy"]
+            },
+            experience: [
+                {
+                    company: "Washington State Department of Ecology",
+                    role: "Software Engineer",
+                    location: "Seattle, WA",
+                    duration: "Aug 2023 - Present",
+                    highlights: [
+                        "Architected a Python ETL pipeline and risk model for tug escort effectiveness, processing 10M+ AIS vessel-tracking messages (2015-2025) with ArcGIS visualization.",
+                        "Optimized data ingestion for 1M+ row weather datasets by migrating Pandas to Polars, reducing runtime from hours to minutes.",
+                        "Accelerated database write speeds 5x by implementing WKB geometry storage via SQLAlchemy chunking.",
+                        "Reduced vessel drift simulation runtime from 1 hour to 5 minutes using Numba and Polars to model momentum and environmental effects.",
+                        "Engineered an in-memory 3D matrix for 500M+ weather records, cutting per-step lookup from 40ms to 2μs across 3000 simulation steps.",
+                        "Maintain the statewide incident response platform, optimizing database layers to reduce incident logging time by 40%.",
+                        "Lead monthly alignment sessions with 5+ stakeholder sections to scope and ship critical updates via ASP.NET, C#, and Azure DevOps."
+                    ],
+                    deepDive: {
+                        title: "High-Performance Risk Modeling",
+                        problem: "State agencies needed to quantify the risk of oil spills and vessel casualties, but the sheer volume of AIS data (10M+ messages) and high-resolution weather records (500M+) made traditional Python processing prohibitively slow.",
+                        solution: "I implemented a multi-layered optimization strategy: replacing Pandas with Polars for vectorized data manipulation, using Numba for JIT-compiling the physics-heavy drift simulations, and restructuring weather data into a 3D NumPy-style matrix for O(1) lookup time. This transformed the simulation from a batch process taking hours into a near-real-time analysis tool.",
+                        impact: "Enabled stakeholders to visualize escort effectiveness across a decade of data in minutes rather than days, directly informing state maritime safety policy."
+                    }
+                },
+                {
+                    company: "Platform Science",
+                    role: "Software Developer Intern",
+                    location: "San Diego, CA",
+                    duration: "Jun 2022 - Sep 2022",
+                    highlights: [
+                        "Boosted client-side integration productivity by 20% by shipping backward-compatible RESTful APIs using Node.js, Express, and Laravel.",
+                        "Increased development velocity by 15% through codebase refactoring (TS/PHP) and introducing Docker-based CI unit testing."
+                    ],
+                    deepDive: {
+                        title: "API Modernization & CI Integration",
+                        problem: "Rapidly evolving client requirements were creating breaking changes in the API, slowing down integration and causing regressions in the PHP/JS codebase.",
+                        solution: "I introduced a versioned API strategy and refactored the backend to support backward compatibility. Simultaneously, I built a Dockerized CI pipeline that automated unit tests for every pull request, ensuring that new features didn't break existing client integrations.",
+                        impact: "Reduced the regression rate and allowed the team to ship updates faster without requiring coordinated client-side deployments."
+                    }
+                },
+                {
+                    company: "Accenture",
+                    role: "Application Developer",
+                    location: "Bangalore, India",
+                    duration: "Sep 2019 - Aug 2021",
+                    highlights: [
+                        "Scaled React.js/MEAN-stack applications, reducing API response times by 40% through aggressive caching and database indexing.",
+                        "Supported 30% more concurrent users and increased engagement by 25% via UI/UX and API optimizations in Agile sprints."
+                    ],
+                    deepDive: {
+                        title: "Full-Stack Scaling for Enterprise Users",
+                        problem: "The application suffered from latency spikes as the user base grew, primarily due to inefficient MongoDB queries and unoptimized frontend rendering.",
+                        solution: "I implemented a multi-level caching strategy (Redis) and optimized database indices based on query execution plans. On the frontend, I refactored React component lifecycles to prevent unnecessary re-renders of large data tables.",
+                        impact: "Significant improvement in perceived performance, allowing the application to scale to a larger user base while maintaining a fluid user experience."
+                    }
+                }
             ],
-            humSabBhartiya: [
-                { note: "C4", duration: 0.5 }, { note: "E4", duration: 0.5 }, { note: "G4", duration: 0.5 },
-                { note: "C5", duration: 1.0 }, { note: "B4", duration: 0.5 }, { note: "A4", duration: 0.5 },
-                { note: "G4", duration: 1.0 }, { note: "F4", duration: 0.5 }, { note: "E4", duration: 0.5 },
-                { note: "D4", duration: 1.0 }, { note: "C4", duration: 1.5 }
+            projects: [
+                {
+                    name: "VR Therapy Platform",
+                    tech: "Unity, C#",
+                    duration: "Sep 2022 - Jun 2023",
+                    highlights: [
+                        "Unified four disparate VR applications into a single modular platform, reducing code redundancy by 35%.",
+                        "Improved rendering performance by 20% by optimizing draw calls and mesh batching."
+                    ],
+                    deepDive: {
+                        title: "Modular VR Architecture",
+                        problem: "The client had four separate VR therapy tools with overlapping logic but separate codebases, making maintenance a nightmare and causing inconsistent performance.",
+                        solution: "I architected a modular framework in Unity, extracting common therapy patterns (navigation, interaction, data logging) into reusable services. I also implemented a custom object pooling system for VR assets to minimize garbage collection spikes.",
+                        impact: "The resulting platform reduced the codebase size by over a third and provided a seamless, high-performance experience for patients."
+                    }
+                },
+                {
+                    name: "Dependify",
+                    tech: "Java, Spring Boot, PostgreSQL, AWS EC2",
+                    duration: "Apr 2022 - Jun 2022",
+                    highlights: [
+                        "Architected a distributed microservices system for centralized dependency management, handling 10,000+ daily requests.",
+                        "Reduced system response time by 40% through optimized service communication and database schema design."
+                    ],
+                    deepDive: {
+                        title: "Distributed Dependency Management",
+                        problem: "Manual tracking of project dependencies across large organizations leads to version conflicts and security vulnerabilities.",
+                        solution: "I built a microservices-based platform using Spring Boot and PostgreSQL, deployed on AWS EC2. I implemented an asynchronous processing queue for dependency scanning to ensure the main API remained responsive under heavy load.",
+                        impact: "Provided a centralized source of truth for dependencies, significantly reducing the time spent on conflict resolution during project integration."
+                    }
+                }
+            ],
+            education: [
+                {
+                    degree: "Master of Science, Computer Science",
+                    school: "University of Washington",
+                    location: "Seattle, WA",
+                    duration: "Sep 2021 - Jun 2023"
+                },
+                {
+                    degree: "Bachelor of Technology, Information Technology",
+                    school: "Guru Gobind Singh Indraprastha University",
+                    location: "New Delhi, India",
+                    duration: "Aug 2015 - Jun 2019"
+                }
             ]
         };
 
-        document.getElementById('playBtn').addEventListener('click', async () => {
-            if (audioCtx.state === 'suspended') {
-                await audioCtx.resume();
-            }
-            const songKey = document.getElementById('songSelect').value;
-            const song = songs[songKey];
+        function init() {
+            document.getElementById('user-name').textContent = userData.name;
+            document.getElementById('user-summary').textContent = userData.summary;
             
-            for (const part of song) {
-                playNote(part.note, part.duration);
-                await new Promise(resolve => setTimeout(resolve, part.duration * 1000));
+            const contactsDiv = document.getElementById('user-contacts');
+            userData.contacts.forEach(c => {
+                const a = document.createElement('a');
+                a.href = c.value;
+                a.textContent = c.label;
+                contactsDiv.appendChild(a);
+            });
+
+            const skillsDiv = document.getElementById('user-skills');
+            for (const [cat, list] of Object.entries(userData.skills)) {
+                const group = document.createElement('div');
+                group.className = 'skill-category';
+                group.innerHTML = `<h4>${cat}</h4><div class="skill-list"></div>`;
+                const listDiv = group.querySelector('.skill-list');
+                list.forEach(s => {
+                    const span = document.createElement('span');
+                    span.className = 'skill-tag';
+                    span.textContent = s;
+                    listDiv.appendChild(span);
+                });
+                skillsDiv.appendChild(group);
             }
-        });
+
+            const expDiv = document.getElementById('user-experience');
+            userData.experience.forEach((exp, idx) => {
+                const item = document.createElement('div');
+                item.className = 'exp-item';
+                item.innerHTML = `
+                    <div class="item-header">
+                        <span class="item-title">${exp.company}</span>
+                        <span class="item-date">${exp.duration}</span>
+                    </div>
+                    <div class="item-sub">${exp.role} | ${exp.location}</div>
+                    <div class="item-content">
+                        <ul>${exp.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+                    </div>
+                    <button class="btn-dive" onclick="openDive('exp', ${idx})">View Technical Deep Dive</button>
+                `;
+                expDiv.appendChild(item);
+            });
+
+            const projDiv = document.getElementById('user-projects');
+            userData.projects.forEach((proj, idx) => {
+                const item = document.createElement('div');
+                item.className = 'proj-item';
+                item.innerHTML = `
+                    <div class="item-header">
+                        <span class="item-title">${proj.name}</span>
+                        <span class="item-date">${proj.duration}</span>
+                    </div>
+                    <span class="proj-tech">${proj.tech}</span>
+                    <div class="item-content">
+                        <ul>${proj.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+                    </div>
+                    <button class="btn-dive" onclick="openDive('proj', ${idx})">View Technical Deep Dive</button>
+                `;
+                projDiv.appendChild(item);
+            });
+
+            const eduDiv = document.getElementById('user-education');
+            userData.education.forEach(edu => {
+                const item = document.createElement('div');
+                item.className = 'exp-item';
+                item.innerHTML = `
+                    <div class="item-header">
+                        <span class="item-title">${edu.degree}</span>
+                        <span class="item-date">${edu.duration}</span>
+                    </div>
+                    <div class="item-sub">${edu.school} | ${edu.location}</div>
+                `;
+                eduDiv.appendChild(item);
+            });
+        }
+
+        function openDive(type, idx) {
+            const data = type === 'exp' ? userData.experience[idx] : userData.projects[idx];
+            const dive = data.deepDive;
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `
+                <h3>${dive.title}</h3>
+                <h4>The Challenge</h4>
+                <p>${dive.problem}</p>
+                <h4>The Engineering Solution</h4>
+                <p>${dive.solution}</p>
+                <div class="highlight-box">
+                    <strong>Key Impact:</strong> ${dive.impact}
+                </div>
+            `;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        window.onclick = (event) => {
+            if (event.target == document.getElementById('modal')) closeModal();
+        }
+
+        init();
     </script>
 </body>
 </html>
